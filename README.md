@@ -2,9 +2,9 @@
 
 This part builds on your Part 7 solution. The key goal is to move functionality from app.py into the classes. See ToDos for details.
 
-Your code should run after you finished a ToDo. You can then make a commit for each individual ToDo. These small commits are called atomic commits. Try!
+Your code should run after you finished a ToDo. You can then make a commit for each individual ToDo. These small commits are called **atomic commits**. Give it a try!
 
-> An atomic commit is a version-control concept (most often discussed with Git) where a single commit does exactly one logical change — no more, no less — and is self-contained, consistent, and reversible.
+> An **atomic commit** is a version-control concept (most often discussed with Git) where a single commit does exactly one logical change — no more, no less — and is self-contained, consistent, and reversible.
 
 ## Run the app
 
