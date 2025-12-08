@@ -16,7 +16,7 @@ import urllib.request
 import urllib.error
 
 from .constants import BANNER, HELP, POETRYDB_URL, CACHE_FILENAME
-from .models import Sonnet, SearchResult, Configuration
+from .models import Sonnet, SearchResult, Configuration, LineMatch # import LineMatch
 
 # ToDo 3: Move find_spans to Sonnet to make this work.
 def find_spans(text: str, pattern: str):
@@ -66,8 +66,8 @@ def ansi_highlight(text: str, spans):
 
 # ToDo 3: Move search_sonnet to the Sonnet class and rename it to 'search_for'
 def search_sonnet(sonnet: Sonnet, query: str) -> SearchResult:
-    title_raw = str(sonnet["title"])
-    lines_raw = sonnet["lines"]  # list[str]
+    title_raw = str(sonnet.title)
+    lines_raw = sonnet.lines  # list[str]
 
     q = query.lower()
     title_spans = find_spans(title_raw.lower(), q)
@@ -78,17 +78,12 @@ def search_sonnet(sonnet: Sonnet, query: str) -> SearchResult:
         if spans:
             line_matches.append(
                 # ToDo 0: Use an instance of class LineMatch
-                {"line_no": idx, "text": line_raw, "spans": spans}
+                LineMatch(idx, line_raw, spans) # copy from exercise 7
             )
 
-    total = len(title_spans) + sum(len(lm["spans"]) for lm in line_matches)
+    total = len(title_spans) + sum(len(lm.spans) for lm in line_matches)
     # ToDo 0: Use an instance of class SearchResult
-    return {
-        "title": title_raw,
-        "title_spans": title_spans,
-        "line_matches": line_matches,
-        "matches": total,
-    }
+    return SearchResult(title_raw, title_spans, line_matches, total) # copy from exercise 7
 
 
 # ToDo 1: Move combine_results to SearchResult. Rename the parameters (use a refactoring of your IDE 😉)!
@@ -99,22 +94,22 @@ def combine_results(result1: SearchResult, result2: SearchResult) -> SearchResul
 
     # ToDo 0: Use dot notation instead of keys to access the attributes of the search results
 
-    combined["matches"] = result1["matches"] + result2["matches"]
-    combined["title_spans"] = sorted(
-        result1["title_spans"] + result2["title_spans"]
+    combined.matches = result1.matches + result2.matches
+    combined.title_spans = sorted(
+        result1.title_spans + result2.title_spans
     )
 
     # Merge line_matches by line number
 
     # ToDo 0: Instead of using a dictionary, e.g., dict(lm), copy the line match, e.g., lm.copy()!
-    lines_by_no = {lm["line_no"]: dict(lm) for lm in result1["line_matches"]}
-    for lm in result2["line_matches"]:
-        ln = lm["line_no"]
+    lines_by_no = {lm.line_no: lm.copy for lm in result1.line_matches}
+    for lm in result2.line_matches:
+        ln = lm.line_no
         if ln in lines_by_no:
             # extend spans & keep original text
-            lines_by_no[ln]["spans"].extend(lm["spans"])
+            lines_by_no[ln].spans.extend(lm.spans)
         else:
-            lines_by_no[ln] = dict(lm)
+            lines_by_no[ln] = lm.copy
 
     combined["line_matches"] = sorted(
         lines_by_no.values(), key=lambda lm: lm["line_no"]
@@ -130,7 +125,7 @@ def print_results(
     query_time_ms: float | None = None,
 ) -> None:
     total_docs = len(results)
-    matched = [r for r in results if r["matches"] > 0]
+    matched = [r for r in results if r.matches > 0]
 
     line = f'{len(matched)} out of {total_docs} sonnets contain "{query}".'
     if query_time_ms is not None:
@@ -143,18 +138,18 @@ def print_results(
         # ToDo 2: From here on move the printing code to SearchResult.print(...)
         #         You should then be able to call r.print(idx, highlight)
         title_line = (
-            ansi_highlight(r["title"], r["title_spans"])
+            ansi_highlight(r.title, r.title_spans)
             if highlight
-            else r["title"]
+            else r.title
         )
         print(f"\n[{idx}/{total_docs}] {title_line}")
-        for lm in r["line_matches"]:
+        for lm in r.line_matches:
             line_out = (
-                ansi_highlight(lm["text"], lm["spans"])
+                ansi_highlight(lm.text, lm.spans)
                 if highlight
-                else lm["text"]
+                else lm.text
             )
-            print(f"  [{lm['line_no']:2}] {line_out}")
+            print(f"  [{lm.line_no:2}] {line_out}")
 
 
 # ---------- Paths & data loading ----------
@@ -236,7 +231,8 @@ def load_sonnets() -> List[Sonnet]:
 
     # ToDo 0: Convert the sonnets that are represented as dictionaries into instances of the Sonnet class.
 
-    return sonnets
+    return [Sonnet(s) for s in sonnets] # list comprehension: turn each dictionary into instance of Sonnet and return as list
+
 # ---------- Config handling (carry over from Part 5) ----------
 
 DEFAULT_CONFIG = Configuration()
@@ -360,13 +356,13 @@ def main() -> None:
                     # ToDo 0: Use dot notation instead of key access of the search result
 
                     if config.search_mode == "AND":
-                        if combined_result["matches"] > 0 and result["matches"] > 0:
+                        if combined_result.matches > 0 and result.matches > 0:
                             # Only if we have matches in both results, we consider the sonnet (logical AND!)
                             # ToDo 1:You will need to adapt the call to combine_results
                             combined_results[i] = combine_results(combined_result, result)
                         else:
                             # Not in both. No match!
-                            combined_result["matches"] = 0
+                            combined_result.matches = 0
                     elif config.search_mode == "OR":
                         # ToDo 1:You will need to adapt the call to combine_results
                         combined_results[i] = combine_results(combined_result, result)
