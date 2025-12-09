@@ -102,3 +102,58 @@ class SearchResult:
         )
 
         return combined
+
+
+    # move function from .app to .models
+    # add @staticmethod decorator
+    @staticmethod
+    def ansi_highlight(text: str, spans: List[Tuple[int, int]]) -> str:
+        """Return text with ANSI highlight escape codes inserted."""
+        if not spans:
+            return text
+
+        spans = sorted(spans)
+        merged = []
+
+        # Merge overlapping spans
+        current_start, current_end = spans[0]
+        for s, e in spans[1:]:
+            if s <= current_end:
+                current_end = max(current_end, e)
+            else:
+                merged.append((current_start, current_end))
+                current_start, current_end = s, e
+        merged.append((current_start, current_end))
+
+        # Build highlighted string
+        out = []
+        i = 0
+        for s, e in merged:
+            out.append(text[i:s])
+            out.append("\033[43m\033[30m")  # yellow background, black text
+            out.append(text[s:e])
+            out.append("\033[0m")  # reset
+            i = e
+        out.append(text[i:])
+        return "".join(out)
+
+    # move code from .app to .models
+    # wrap in method "print"
+    # pass idx, highlight, and total_docs as arguments
+    def print(self, idx: int, highlight: bool, total_docs: int) -> None:
+        # structural changes (we no longer use this code in a loop like in .app)
+        # change 1: choosing whether to use highlight for title
+        if highlight:
+            title_line = SearchResult.ansi_highlight(self.title, self.title_spans) # dot notation for ansi_highlight
+        else:
+            title_line = self.title
+
+        print(f"\n[{idx}/{total_docs}] {title_line}")
+        # change 2: choosing whether to use highlight for line
+        for lm in self.line_matches:
+            if highlight:
+                line_out = SearchResult.ansi_highlight(lm.text, lm.spans) # dot notation for ansi_highlight
+            else:
+                line_out = lm.text
+
+            print(f"  [{lm.line_no:2}] {line_out}")

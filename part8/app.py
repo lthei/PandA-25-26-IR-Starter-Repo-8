@@ -33,36 +33,8 @@ def find_spans(text: str, pattern: str):
 
 
 # ToDo 2: You will need to move ansi_highlight to SearchResult as well.
-def ansi_highlight(text: str, spans):
-    """Return text with ANSI highlight escape codes inserted."""
-    if not spans:
-        return text
-
-    spans = sorted(spans)
-    merged = []
-
-    # Merge overlapping spans
-    current_start, current_end = spans[0]
-    for s, e in spans[1:]:
-        if s <= current_end:
-            current_end = max(current_end, e)
-        else:
-            merged.append((current_start, current_end))
-            current_start, current_end = s, e
-    merged.append((current_start, current_end))
-
-    # Build highlighted string
-    out = []
-    i = 0
-    for s, e in merged:
-        out.append(text[i:s])
-        out.append("\033[43m\033[30m")  # yellow background, black text
-        out.append(text[s:e])
-        out.append("\033[0m")           # reset
-        i = e
-    out.append(text[i:])
-    return "".join(out)
-
+# moved function to .models
+# moved function to .models
 
 # ToDo 3: Move search_sonnet to the Sonnet class and rename it to 'search_for'
 def search_sonnet(sonnet: Sonnet, query: str) -> SearchResult:
@@ -109,19 +81,8 @@ def print_results(
 
         # ToDo 2: From here on move the printing code to SearchResult.print(...)
         #         You should then be able to call r.print(idx, highlight)
-        title_line = (
-            ansi_highlight(r.title, r.title_spans)
-            if highlight
-            else r.title
-        )
-        print(f"\n[{idx}/{total_docs}] {title_line}")
-        for lm in r.line_matches:
-            line_out = (
-                ansi_highlight(lm.text, lm.spans)
-                if highlight
-                else lm.text
-            )
-            print(f"  [{lm.line_no:2}] {line_out}")
+        # code moved to .models
+        r.print(idx, highlight, total_docs) # you also need total_docs?
 
 
 # ---------- Paths & data loading ----------
