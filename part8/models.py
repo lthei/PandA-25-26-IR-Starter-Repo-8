@@ -69,4 +69,36 @@ class SearchResult:
     def copy(self):
         return SearchResult(self.title, self.title_spans, self.line_matches, self.matches)
 
+    # function combine_results moved from .app to .models
+    # function (now method) renamed to combine_with
+    # add first parameter "self", other parameter "SearchResult"
+    # rename parameters: result1 to self and result2 to other
+    def combine_with(self, other: "SearchResult") -> "SearchResult":
+        """Combine two search results."""
 
+        combined = self.copy()  # shallow copy # instead of combined = result1.copy()
+
+        # ToDo 0: Use dot notation instead of keys to access the attributes of the search results
+
+        combined.matches = self.matches + other.matches # instead of: combined.matches = result1.matches + result2.matches
+        combined.title_spans = sorted(
+            self.title_spans + other.title_spans
+        )
+
+        # Merge line_matches by line number
+
+        # ToDo 0: Instead of using a dictionary, e.g., dict(lm), copy the line match, e.g., lm.copy()!
+        lines_by_no = {lm.line_no: lm.copy for lm in self.line_matches}
+        for lm in other.line_matches:
+            ln = lm.line_no
+            if ln in lines_by_no:
+                # extend spans & keep original text
+                lines_by_no[ln].spans.extend(lm.spans)
+            else:
+                lines_by_no[ln] = lm.copy
+
+        combined.line_matches = sorted(
+            lines_by_no.values(), key=lambda lm: lm["line_no"]
+        )
+
+        return combined
