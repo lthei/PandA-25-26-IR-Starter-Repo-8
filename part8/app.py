@@ -19,44 +19,13 @@ from .constants import BANNER, HELP, POETRYDB_URL, CACHE_FILENAME
 from .models import Sonnet, SearchResult, Configuration, LineMatch # import LineMatch
 
 # ToDo 3: Move find_spans to Sonnet to make this work.
-def find_spans(text: str, pattern: str):
-    """Return [(start, end), ...] for all (possibly overlapping) matches.
-    Inputs should already be lowercased by the caller."""
-    spans = []
-    if not pattern:
-        return spans
-
-    for i in range(len(text) - len(pattern) + 1):
-        if text[i:i + len(pattern)] == pattern:
-            spans.append((i, i + len(pattern)))
-    return spans
-
+# moved function to .models
 
 # ToDo 2: You will need to move ansi_highlight to SearchResult as well.
 # moved function to .models
-# moved function to .models
 
 # ToDo 3: Move search_sonnet to the Sonnet class and rename it to 'search_for'
-def search_sonnet(sonnet: Sonnet, query: str) -> SearchResult:
-    title_raw = str(sonnet.title)
-    lines_raw = sonnet.lines  # list[str]
-
-    q = query.lower()
-    title_spans = find_spans(title_raw.lower(), q)
-
-    line_matches = []
-    for idx, line_raw in enumerate(lines_raw, start=1):  # 1-based line numbers
-        spans = find_spans(line_raw.lower(), q)
-        if spans:
-            line_matches.append(
-                # ToDo 0: Use an instance of class LineMatch
-                LineMatch(idx, line_raw, spans) # copy from exercise 7
-            )
-
-    total = len(title_spans) + sum(len(lm.spans) for lm in line_matches)
-    # ToDo 0: Use an instance of class SearchResult
-    return SearchResult(title_raw, title_spans, line_matches, total) # copy from exercise 7
-
+# moved function to .models
 
 # ToDo 1: Move combine_results to SearchResult. Rename the parameters (use a refactoring of your IDE 😉)!
 # moved function to .models
@@ -274,7 +243,7 @@ def main() -> None:
         for word in words:
             # Searching for the word in all sonnets
             # ToDo 3:You will need to adapt the call to search_sonnet
-            results = [search_sonnet(s, word) for s in sonnets]
+            results = [s.search_for(word) for s in sonnets] # dot notation
 
             if not combined_results:
                 # No results yet. We store the first list of results in combined_results

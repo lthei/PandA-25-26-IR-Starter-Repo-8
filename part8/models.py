@@ -49,6 +49,41 @@ class Sonnet:
         self.title = sonnet_data["title"]
         self.lines = sonnet_data["lines"]
 
+    # function find_spans moved from .app to .models
+    # add @staticmethod decorator
+    @staticmethod
+    def find_spans(text: str, pattern: str) -> List[Tuple[int, int]]:
+        spans = []
+        if not pattern:
+            return spans
+
+        for i in range(len(text) - len(pattern) + 1):
+            if text[i:i + len(pattern)] == pattern:
+                spans.append((i, i + len(pattern)))
+        return spans
+
+    # function search_sonnet moved from .app to .models
+    # rename method to search_for
+    def search_for(self, query: str) -> "SearchResult":
+        title_raw = str(self.title) # dot notation
+        lines_raw = self.lines  # list[str] # dot notation
+
+        q = query.lower()
+        title_spans = Sonnet.find_spans(title_raw.lower(), q) # dot notation
+
+        line_matches = []
+        for idx, line_raw in enumerate(lines_raw, start=1):  # 1-based line numbers
+            spans = Sonnet.find_spans(line_raw.lower(), q) # dot notation
+            if spans:
+                line_matches.append(
+                    # ToDo 0: Use an instance of class LineMatch
+                    LineMatch(idx, line_raw, spans) # copy from exercise 7
+                )
+
+        total = len(title_spans) + sum(len(lm.spans) for lm in line_matches)
+        # ToDo 0: Use an instance of class SearchResult
+        return SearchResult(title_raw, title_spans, line_matches, total) # copy from exercise 7
+
 
 class LineMatch:
     def __init__(self, line_no: int, text: str, spans: List[Tuple[int, int]]):
