@@ -176,19 +176,16 @@ class SearchResult:
     # wrap in method "print"
     # pass idx, highlight, and total_docs as arguments
     def print(self, idx: int, highlight: bool, total_docs: int) -> None:
-        # structural changes (we no longer use this code in a loop like in .app)
-        # change 1: choosing whether to use highlight for title
-        if highlight:
-            title_line = SearchResult.ansi_highlight(self.title, self.title_spans) # dot notation for ansi_highlight
-        else:
-            title_line = self.title
-
+        title_line = (
+            SearchResult.ansi_highlight(self.title, self.title_spans)
+            if highlight
+            else self.title
+        )
         print(f"\n[{idx}/{total_docs}] {title_line}")
-        # change 2: choosing whether to use highlight for line
         for lm in self.line_matches:
-            if highlight:
-                line_out = SearchResult.ansi_highlight(lm.text, lm.spans) # dot notation for ansi_highlight
-            else:
-                line_out = lm.text
-
+            line_out = (
+                SearchResult.ansi_highlight(lm.text, lm.spans)
+                if highlight
+                else lm.text
+            )
             print(f"  [{lm.line_no:2}] {line_out}")
